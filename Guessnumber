@@ -1,0 +1,81 @@
+# -*- coding: utf-8 -*-
+# windows 下如果出现编码问题，将 utf-8 改为 cp936
+
+from random import randint
+import re
+
+player = input('请输入玩家的姓名：')
+print('欢迎回来 ',player,'，祝你游戏愉快！')
+
+def guess():
+    times = 1  # 本轮次数置0
+    bingo = False
+    num = randint(0, 100)
+    print('猜猜数字是几？')
+    while bingo == False:
+        print('第%d次' % times)
+        answer = ''
+        while answer == '':
+            answer = input('请输入100以内的数字\n')
+            m = re.findall(r'^([0-9]\d{0,1}|100)$', answer)
+            if m:
+                if int(answer) < num:
+                    print('%s 太小了\n' % answer)
+                    times += 1
+                if int(answer) > num:
+                    print('%s 太大了\n' % answer)
+                    times += 1
+                if int(answer) == num:
+                    print('猜中了！答案就是%s\n你猜中答案一共用了%d次机会' % (answer,times))
+                    bingo = True
+            else:
+                answer = ''
+    f = open('record.txt')
+    lines = f.readlines()
+    f.close()
+
+    scores = {}  # 初始化一个空字典
+    for l in lines:
+        s = l.split()  # 把每一行的数据拆分成list
+        scores[s[0]] = s[1:]  # 第一项作为key,剩下的作为value
+    score = scores.get(player)  # 查找当前玩家的数据
+    if score is None:  # 如果没找到
+        score = [0, 0, 0]  # 初始化数据
+    game_times = int(score[0])
+    min_times = int(score[1])
+    total_times = int(score[2])
+
+    # 如果是第一次玩，或者轮数比最小轮数小，则更新最小轮数
+    if game_times == 0 or times < min_times:
+        min_times = times
+
+    total_times += times
+    game_times += 1
+    avg_times = float(total_times) / game_times
+
+    #把成绩更新到对应的玩家数据中
+    #加str转成字符串，为后面的格式化作准备
+    scores[player] = [str(game_times),str(min_times),str(total_times)]
+    result = ''#初始化一个空字符串，用来存储数据
+    for n in scores:
+        #把成绩按照“name game_times min_times total_times格式化”
+        #结尾要加上\n换行
+        line = n + ' ' + ' '.join(scores[n]) + '\n'
+        result += line #添加到result中
+    f = open('record.txt','w')
+    f.write(result)
+    f.close()
+    #输出成绩信息，平均每轮保留2位小数
+    print('你一共玩了%d次游戏\n你平均%.2f轮猜出答案\n你最好成绩是%d次\n' % (game_times,avg_times,min_times))
+
+play = True
+while play:
+    guess()
+    choose = input('输入go再玩一次，否则退出游戏')
+    if choose == 'go':
+        play = True
+        print('新游戏')
+    else:
+        play = False
+
+a = input()#因为制作EXE时画面一闪而过，所以多加一个输入用来关闭程序
